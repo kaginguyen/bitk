@@ -1,2 +1,2 @@
-from mailer import Mailer
-from pgsql import PostgreSQLConnector 
+from bitk.mailer import Mailer
+from bitk.pgsql import PostgreSQLConnector 
