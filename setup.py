@@ -8,7 +8,7 @@ setup(
   author = 'Loc Nguyen',                   # Type in your name
   author_email = 'your.email@domain.com',      # Type in your E-Mail
   url = 'https://github.com/locnguyen14061996/bitk',   # Provide either the link to your github or to your website
-  download_url = 'https://github.com/locnguyen14061996/bitk/archive/0.0.1.tar.gz',    # I explain this later on
+  download_url = 'https://github.com/locnguyen14061996/bitk/archive/0.0.2.tar.gz',    # I explain this later on
   keywords = ['python3', 'simple','business intelligence'],   # Keywords that define your package best
   install_requires=[            # I get to this in a second
           'pandas', 
