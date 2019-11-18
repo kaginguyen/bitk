@@ -2,7 +2,7 @@ from distutils.core import setup
 setup(
   name = 'bitk',         # How you named your package folder (MyLib)
   packages = ['bitk'],   # Chose the same as "name"
-  version = '0.0.1',      # Start with a small number and increase it with every change you make
+  version = '0.0.2',      # Start with a small number and increase it with every change you make
   license='MIT',        # Chose a license from here: https://help.github.com/articles/licensing-a-repository
   description = 'Toolkit for Business Intelligence, who wants things simple without hassle',   # Give a short description about your library
   author = 'Loc Nguyen',                   # Type in your name
