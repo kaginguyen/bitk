@@ -1,23 +1,54 @@
 from threading import Thread, Event 
 import configparser, os
 from time import sleep
-from bitk.pgsql import PostgreSQLConnector
+import psycopg2
 
 
 
 class Worker(Thread):
     def __init__(self, config): 
         Thread.__init__(self)
+        
+        self._counter = 0
+        self._stop_flag = Event()
+
         self.config = list(config)
-        self.counter = 0
         self.thread_name = config["name"]
-        self.stop_flag = Event()
+        self.source_setting = config["source"].split("|")
+        self.pull_script = config["pull"]
+        self.dest_setting = config["dest"].split("|")
+        self.push_script = config["push"]
+
+
+    def db_connect(self, db_setting):
+        if db_setting[0].split(":")[0] == 'postgresql':
+            db_conn = psycopg2.connect(dbname = db_setting[0].split(":")[1],
+                                        host = db_setting[1].split(":")[0],
+                                        port = db_setting[1].split(":")[1],
+                                        user = db_setting[2].split(":")[0],
+                                        password = db_setting[2].split(":")[1],)
+
+        elif db_setting[0].split(":")[0] == 'mysql':
+            pass 
+        
+        return db_conn
+
+
+    def pull(self): 
+        with db_connect(self.source_setting).cursor() as cur: 
+            data = cur.execute(self.pull_script)
+
+        if data.rowcount() < 200000: 
+            data = data.fetchall()
+        
+        
 
 
     def run(self):
+
         while not self.stop_flag.is_set():
-            self.counter += 1
-            self.stop_flag.wait(4)
+            self._counter += 1
+            self._stop_flag.wait(4)
 
 
 
@@ -63,7 +94,7 @@ class Manager:
 
         except KeyboardInterrupt: 
             for i in self.threads_list:
-                i.stop_flag.set()
+                i._stop_flag.set()
                 i.join()
                 print("Thread {} has stopped".format(i.thread_name))
 
