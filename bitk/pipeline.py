@@ -1,6 +1,7 @@
-from threading import Thread
+from threading import Thread, Event 
 import configparser, os
 from time import sleep
+from bitk.pgsql import PostgreSQLConnector
 
 
 
@@ -10,17 +11,13 @@ class Worker(Thread):
         self.config = list(config)
         self.counter = 0
         self.thread_name = config["name"]
-        global stop_flag
+        self.stop_flag = Event()
 
 
     def run(self):
-        while True: 
-            try: 
-                self.counter += 1
-                sleep(1)
-        
-            except stop_flag == True:
-                break
+        while not self.stop_flag.is_set():
+            self.counter += 1
+            self.stop_flag.wait(4)
 
 
 
@@ -53,7 +50,6 @@ class Manager:
         border_str = "".join(list("+" + "-"*(i[1]) for i in columns_config)) + "+"
 
         try: 
-            stop_flag = False
             while True:
                 os.system('cls' if os.name == 'nt' else 'clear')
 
@@ -63,8 +59,14 @@ class Manager:
                     print("".join(list("|" + format(" " + str(thread.__dict__.get(i[2])), "<{}".format(i[1])) for i in columns_config)) + "|" )
                 print(border_str)
 
-                sleep(3) 
-        except: 
-            pass 
+                sleep(4) 
+
+        except KeyboardInterrupt: 
+            for i in self.threads_list:
+                i.stop_flag.set()
+                i.join()
+                print("Thread {} has stopped".format(i.thread_name))
+
+
 
         
