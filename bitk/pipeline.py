@@ -9,7 +9,6 @@ class Worker(Thread):
     def __init__(self, config): 
         Thread.__init__(self)
         
-        self._counter = 0
         self._stop_flag = Event()
 
         self.config = list(config)
@@ -18,37 +17,59 @@ class Worker(Thread):
         self.pull_script = config["pull"]
         self.dest_setting = config["dest"].split("|")
         self.push_script = config["push"]
+        self.initial_timestamp = config["initial_timestamp"] 
+
+        config = configparser.ConfigParser()
+        config.read("./local.ini")
+        if config["Local Setting"][config["name"]] == None: 
+            config["Local Setting"][config["name"]] = self.initial_timestamp 
+        else: 
+            self.initial_timestamp = config["Local Setting"][config["name"]]
 
 
-    def db_connect(self, db_setting):
+    def db_connect(self, db_setting, script):
         if db_setting[0].split(":")[0] == 'postgresql':
             db_conn = psycopg2.connect(dbname = db_setting[0].split(":")[1],
                                         host = db_setting[1].split(":")[0],
                                         port = db_setting[1].split(":")[1],
                                         user = db_setting[2].split(":")[0],
                                         password = db_setting[2].split(":")[1],)
+            
+            with db_conn.cursor() as cur:
+                cur.execute(script)
+                result = cur.fetchall()
 
         elif db_setting[0].split(":")[0] == 'mysql':
             pass 
         
-        return db_conn
+        return result
 
 
     def pull(self): 
-        with db_connect(self.source_setting).cursor() as cur: 
-            data = cur.execute(self.pull_script)
+        # Script formatting will go into this part 
+        
 
-        if data.rowcount() < 200000: 
-            data = data.fetchall()
+        result = db_connect(self.source_setting, self.pull_script)
         
+        return result 
+
+    
+    def push(self, data): 
+        # INSERT script formatting wil go into this part 
         
+        db_connect(self.dest_setting, self.push_script)
+
+        return None 
 
 
     def run(self):
 
         while not self.stop_flag.is_set():
-            self._counter += 1
-            self._stop_flag.wait(4)
+            self._stop_flag.wait(5) 
+            data = pull()
+            push(data) 
+
+            
 
 
 
@@ -62,6 +83,16 @@ class Manager:
     def execute(self):
         config = configparser.ConfigParser()
         config.read(self.ini_file)
+        
+        if os.path.exists("./local.ini") == False: 
+            local_config = configparser.ConfigParser()
+            local_config.add_section("Local Setting")
+            for i in config.sections():
+                local_config["Local Setting"][config[i]["name"]] = config[i]["initial_timestamp"]
+                
+            
+
+        
         self.threads_list = []
 
         for i in config.sections():
