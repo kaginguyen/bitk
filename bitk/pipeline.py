@@ -17,14 +17,10 @@ class Worker(Thread):
         self.pull_script = config["pull"]
         self.dest_setting = config["dest"].split("|")
         self.push_script = config["push"]
-        self.initial_timestamp = config["initial_timestamp"] 
 
-        config = configparser.ConfigParser()
-        config.read("./local.ini")
-        if config["Local Setting"][config["name"]] == None: 
-            config["Local Setting"][config["name"]] = self.initial_timestamp 
-        else: 
-            self.initial_timestamp = config["Local Setting"][config["name"]]
+        saving_config = configparser.ConfigParser()
+        saving_config.read("./local.ini")
+        self.initial_timestamp = saving_config["Local Setting"][self.config["name"]]
 
 
     def db_connect(self, db_setting, script):
@@ -81,16 +77,30 @@ class Manager:
 
 
     def execute(self):
+        # Config here is the config of users 
         config = configparser.ConfigParser()
         config.read(self.ini_file)
         
+        # saving_config is the ini file that saves the latest timestamp when running
+        # base timestamp from config file is only for starting
         if os.path.exists("./local.ini") == False: 
-            local_config = configparser.ConfigParser()
-            local_config.add_section("Local Setting")
+            saving_config = configparser.ConfigParser()
+            saving_config.add_section("Local Setting")
+
             for i in config.sections():
-                local_config["Local Setting"][config[i]["name"]] = config[i]["initial_timestamp"]
+                saving_config["Local Setting"][config[i]["name"]] = config[i]["initial_timestamp"]
                 
+            with open("./local.ini", "w") as file: 
+                saving_config.write(file)
+
+        elif os.path.exists("./local.ini") == True:
+            saving_config = configparser.ConfigParser()
+            saving_config.read("./local.ini")
             
+            for i in config.sections():
+                thread_name = config[i]["name"]
+                if config[i]["initial_timestamp"] > saving_config["Local Setting"][thread_name]
+                    saving_config["Local Setting"][thread_name] = config[i]["initial_timestamp"]
 
         
         self.threads_list = []
