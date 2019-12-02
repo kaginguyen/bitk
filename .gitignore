@@ -5,3 +5,4 @@ setup.cfg
 setup.py 
 MANIFEST
 /bitk/__pycache__/
+*.ini
